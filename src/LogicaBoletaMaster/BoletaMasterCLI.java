@@ -60,7 +60,7 @@ public class BoletaMasterCLI {
 
 
     public void run() {
-        System.out.println("=== BoletaMaster (CLI) ===");
+        System.out.println("=== BoletaMaster ===");
         seedData();
 
         Cliente sesion = loginCliente();

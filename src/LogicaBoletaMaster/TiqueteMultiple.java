@@ -7,12 +7,12 @@ import java.util.List;
 public class TiqueteMultiple {
 	
     private final String idPaquete;
-    private final Evento eventoPrincipal; // puede ser null si cubre varios
+    private final Evento eventoPrincipal; 
     private final List<Tiquete> componentes = new ArrayList<>();
     private boolean vendido = false;
-    private Cliente dueno; // dueno del paquete
+    private Cliente dueno; 
     private final Dinero precioPaquete;
-    private final boolean transferible = false; // restricción: NO transferible
+    private final boolean transferible = false; 
 
     public TiqueteMultiple(String idPaquete, Evento eventoPrincipal, Dinero precioPaquete) {
         this.idPaquete = idPaquete;
