@@ -1,5 +1,4 @@
 package LogicaBoletaMaster;
-
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -94,6 +93,7 @@ public class BoletaMasterCLI {
 
 
     private Cliente loginCliente() {
+    	/*
         System.out.println("\nInicia sesión como cliente. Disponibles: " + clientes.keySet());
         System.out.print("Login: ");
         String login = sc.nextLine().trim();
@@ -106,6 +106,40 @@ public class BoletaMasterCLI {
             return null;
         }
         System.out.println("Bienvenido, " + c.getLogin() + "!");
+        return c;
+        */
+    	System.out.println("\nInicia sesión o crea un nuevo cliente.");
+        System.out.println("Clientes existentes: " + clientes.keySet());
+
+        System.out.print("Login: ");
+        String login = sc.nextLine().trim();
+
+        Cliente c = clientes.get(login);
+
+        if (c == null) {
+            System.out.print("El cliente no existe. ¿Deseas crear una nueva cuenta? (s/n): ");
+            String resp = sc.nextLine().trim().toLowerCase();
+            if (resp.equals("s")) {
+                System.out.print("Crea una contraseña: ");
+                String pass = sc.nextLine().trim();
+                c = new Cliente(login, pass);
+                sistema.registrarUsuario(c);
+                clientes.put(login, c);
+                System.out.println("Cliente '" + login + "' creado exitosamente.");
+            } else {
+                System.out.println("No se creó el cliente. Saliendo...");
+                return null;
+            }
+        } else {
+            System.out.print("Password: ");
+            String pass = sc.nextLine().trim();
+            if (!c.validarPassword(pass)) {
+                System.out.println("Contraseña incorrecta.");
+                return null;
+            }
+            System.out.println("Bienvenido, " + c.getLogin() + "!");
+        }
+
         return c;
     }
 
@@ -146,7 +180,9 @@ public class BoletaMasterCLI {
     private void listarEventosYLocalidades() {
         System.out.println("\nEventos:");
         for (Evento e : new ArrayList<>(sistema.getEventoMap().values())) {
-            System.out.println("- " + e.getId() + " | " + e.getNombre() + " | " + e.getTipo() + " | " + e.getFechaHora());
+            //System.out.println("- " + e.getId() + " | " + e.getNombre() + " | " + e.getTipo() + " | " + e.getFechaHora());
+        	System.out.println(String.format("- %-8s | %-20s | %-10s | %s",e.getId(), e.getNombre(), e.getTipo(),e.getFechaHora().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))));
+
             for (Localidad l : e.getLocalidades()) {
                 String extra = l.esNumerada() ? "Numerada" : ("No numerada, cupo=" + l.getCupoDisponible());
                 System.out.println("   · " + l.getId() + " | " + l.getNombre() + " | precio ahora=" + l.precioPublicoAhora() + " | " + extra);
