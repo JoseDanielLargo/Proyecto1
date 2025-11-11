@@ -1,6 +1,12 @@
 package LogicaBoletaMaster;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.function.Function;
+
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+
 
 public class BoletaMasterCLI {
 
@@ -11,50 +17,46 @@ public class BoletaMasterCLI {
     private Administrador admin;
     private Organizador organizador;
     private Map<String, Cliente> clientes = new HashMap<>();
+    
+    private static final String RUTA_EVENTOS = "data/eventos.json";
+    private static final String RUTA_USUARIOS = "data/usuarios.json";
 
     public BoletaMasterCLI(SistemaBoletaMaster sistema) {
         this.sistema = sistema;
     }
-
+    
     public void seedData() {
+    	Type tipoUsuarios = new TypeToken<List<Cliente>>(){}.getType();
+    	List<Cliente> listaClientes = PersistenciaJSON.cargarLista(RUTA_USUARIOS, tipoUsuarios);
+    	if (listaClientes != null && !listaClientes.isEmpty()) {
+    	    clientes = listaClientes.stream()
+    	                .collect(Collectors.toMap(Cliente::getLogin, Function.identity()));
+    	} else {
+    	    Cliente juan = new Cliente("juan", "123");
+    	    juan.acreditarSaldo(new Dinero(200_000));
+    	    clientes.put(juan.getLogin(), juan);
 
-        admin = new Administrador("admin", "admin123");
-        admin.fijarTarifaEmision(new Dinero(2000)); 
-        admin.fijarPorcentajeServicio(0.10);        
-        sistema.registrarUsuario(admin);
-
-        // Organizador
-        organizador = new Organizador("promotor", "promotor123");
-        sistema.registrarUsuario(organizador);
-
-     
-        Cliente juan = new Cliente("juan", "123");
-        juan.acreditarSaldo(new Dinero(200_000));
-        sistema.registrarUsuario(juan);
-        clientes.put(juan.getLogin(), juan);
-
-        Cliente maria = new Cliente("maria", "456");
-        maria.acreditarSaldo(new Dinero(80_000));
-        sistema.registrarUsuario(maria);
-        clientes.put(maria.getLogin(), maria);
-
-        
-        Venue estadio = new Venue("VEN-001", "Bogotá", 20000);
-        sistema.registrarVenue(estadio);
-
-  
-        LocalDateTime fecha1 = LocalDateTime.now().plusDays(7).withHour(19).withMinute(0);
-        Evento concierto = new Evento("EV-ROCK", "Rock Fest", "MUSICAL", organizador, estadio, fecha1);
-        sistema.registrarEvento(concierto);
-
-       
-        Localidad platea = new Localidad("LOC-PLATEA", concierto, "Platea", true, new Dinero(50_000), 0);
-        sistema.registrarLocalidad(platea);
-        sistema.crearAsientos(platea, Arrays.asList("A1","A2","A3","A4","A5"));
-
-        Localidad general = new Localidad("LOC-GRAL", concierto, "General", false, new Dinero(30_000), 150);
-        sistema.registrarLocalidad(general);
-        general.definirOferta(new Dinero(5000), LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(2));
+    	    Cliente maria = new Cliente("maria", "456");
+    	    maria.acreditarSaldo(new Dinero(80_000));
+    	    clientes.put(maria.getLogin(), maria);
+    	}
+    	Type tipoEventos = new TypeToken<List<Evento>>(){}.getType();
+    	List<Evento> listaEventos = PersistenciaJSON.cargarLista(RUTA_EVENTOS, tipoEventos);
+    	Venue v1 = new Venue("VEN-001", "Bogotá", 20000);
+    	sistema.registrarVenue(v1);
+    	Venue v2 = new Venue("VEN-002", "Medellín", 15000);
+    	sistema.registrarVenue(v2);
+    	for (Evento e : listaEventos) {
+    	    Venue venueAsociado = sistema.getVenue(e.getVenueId());
+    	    if (venueAsociado == null) {
+    	        venueAsociado = v1;
+    	    }
+    	    e.setVenue(venueAsociado);
+    	    sistema.registrarEvento(e);
+    	}
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            PersistenciaJSON.guardar(RUTA_USUARIOS, clientes.values());
+        }));
     }
 
 

@@ -1,0 +1,26 @@
+[
+  {
+    "compras": [],
+    "login": "jose",
+    "password": "1212",
+    "saldo": {
+      "pesos": 0
+    }
+  },
+  {
+    "compras": [],
+    "login": "juan",
+    "password": "123",
+    "saldo": {
+      "pesos": 200000
+    }
+  },
+  {
+    "compras": [],
+    "login": "maria",
+    "password": "456",
+    "saldo": {
+      "pesos": 80000
+    }
+  }
+]

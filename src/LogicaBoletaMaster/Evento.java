@@ -10,9 +10,11 @@ public class Evento {
     private final String nombre;
     private final String tipo; 
     private final Organizador organizador;
-    private final Venue venue;
+    private Venue venue;
     private final LocalDateTime fechaHora;
     private String estado; 
+    private String venueId;
+
 
     private final List<Localidad> localidades = new ArrayList<>();
 
@@ -62,6 +64,20 @@ public class Evento {
     public boolean estaActivo() {
         return "PROGRAMADO".equals(estado);
     }
+
+
+    public void setVenueId(String venueId) {
+        this.venueId = venueId;
+    }
+
+    public void setVenue(Venue v) {
+        this.venue = v;
+    }
+    public String getVenueId() {
+        if (venue != null) return venue.getId();
+        return venueId;
+    }
+
     @Override
     public String toString() {
         return "Evento{" +
