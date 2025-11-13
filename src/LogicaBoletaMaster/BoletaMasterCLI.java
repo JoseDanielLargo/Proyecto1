@@ -1,7 +1,12 @@
 package LogicaBoletaMaster;
-
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.function.Function;
+
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+
 
 public class BoletaMasterCLI {
 
@@ -12,50 +17,46 @@ public class BoletaMasterCLI {
     private Administrador admin;
     private Organizador organizador;
     private Map<String, Cliente> clientes = new HashMap<>();
+    
+    private static final String RUTA_EVENTOS = "data/eventos.json";
+    private static final String RUTA_USUARIOS = "data/usuarios.json";
 
     public BoletaMasterCLI(SistemaBoletaMaster sistema) {
         this.sistema = sistema;
     }
-
+    
     public void seedData() {
+    	Type tipoUsuarios = new TypeToken<List<Cliente>>(){}.getType();
+    	List<Cliente> listaClientes = PersistenciaJSON.cargarLista(RUTA_USUARIOS, tipoUsuarios);
+    	if (listaClientes != null && !listaClientes.isEmpty()) {
+    	    clientes = listaClientes.stream()
+    	                .collect(Collectors.toMap(Cliente::getLogin, Function.identity()));
+    	} else {
+    	    Cliente juan = new Cliente("juan", "123");
+    	    juan.acreditarSaldo(new Dinero(200_000));
+    	    clientes.put(juan.getLogin(), juan);
 
-        admin = new Administrador("admin", "admin123");
-        admin.fijarTarifaEmision(new Dinero(2000)); 
-        admin.fijarPorcentajeServicio(0.10);        
-        sistema.registrarUsuario(admin);
-
-        // Organizador
-        organizador = new Organizador("promotor", "promotor123");
-        sistema.registrarUsuario(organizador);
-
-     
-        Cliente juan = new Cliente("juan", "123");
-        juan.acreditarSaldo(new Dinero(200_000));
-        sistema.registrarUsuario(juan);
-        clientes.put(juan.getLogin(), juan);
-
-        Cliente maria = new Cliente("maria", "456");
-        maria.acreditarSaldo(new Dinero(80_000));
-        sistema.registrarUsuario(maria);
-        clientes.put(maria.getLogin(), maria);
-
-        
-        Venue estadio = new Venue("VEN-001", "Bogotá", 20000);
-        sistema.registrarVenue(estadio);
-
-  
-        LocalDateTime fecha1 = LocalDateTime.now().plusDays(7).withHour(19).withMinute(0);
-        Evento concierto = new Evento("EV-ROCK", "Rock Fest", "MUSICAL", organizador, estadio, fecha1);
-        sistema.registrarEvento(concierto);
-
-       
-        Localidad platea = new Localidad("LOC-PLATEA", concierto, "Platea", true, new Dinero(50_000), 0);
-        sistema.registrarLocalidad(platea);
-        sistema.crearAsientos(platea, Arrays.asList("A1","A2","A3","A4","A5"));
-
-        Localidad general = new Localidad("LOC-GRAL", concierto, "General", false, new Dinero(30_000), 150);
-        sistema.registrarLocalidad(general);
-        general.definirOferta(new Dinero(5000), LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(2));
+    	    Cliente maria = new Cliente("maria", "456");
+    	    maria.acreditarSaldo(new Dinero(80_000));
+    	    clientes.put(maria.getLogin(), maria);
+    	}
+    	Type tipoEventos = new TypeToken<List<Evento>>(){}.getType();
+    	List<Evento> listaEventos = PersistenciaJSON.cargarLista(RUTA_EVENTOS, tipoEventos);
+    	Venue v1 = new Venue("VEN-001", "Bogotá", 20000);
+    	sistema.registrarVenue(v1);
+    	Venue v2 = new Venue("VEN-002", "Medellín", 15000);
+    	sistema.registrarVenue(v2);
+    	for (Evento e : listaEventos) {
+    	    Venue venueAsociado = sistema.getVenue(e.getVenueId());
+    	    if (venueAsociado == null) {
+    	        venueAsociado = v1;
+    	    }
+    	    e.setVenue(venueAsociado);
+    	    sistema.registrarEvento(e);
+    	}
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            PersistenciaJSON.guardar(RUTA_USUARIOS, clientes.values());
+        }));
     }
 
 
@@ -94,6 +95,7 @@ public class BoletaMasterCLI {
 
 
     private Cliente loginCliente() {
+    	/*
         System.out.println("\nInicia sesión como cliente. Disponibles: " + clientes.keySet());
         System.out.print("Login: ");
         String login = sc.nextLine().trim();
@@ -106,6 +108,40 @@ public class BoletaMasterCLI {
             return null;
         }
         System.out.println("Bienvenido, " + c.getLogin() + "!");
+        return c;
+        */
+    	System.out.println("\nInicia sesión o crea un nuevo cliente.");
+        System.out.println("Clientes existentes: " + clientes.keySet());
+
+        System.out.print("Login: ");
+        String login = sc.nextLine().trim();
+
+        Cliente c = clientes.get(login);
+
+        if (c == null) {
+            System.out.print("El cliente no existe. ¿Deseas crear una nueva cuenta? (s/n): ");
+            String resp = sc.nextLine().trim().toLowerCase();
+            if (resp.equals("s")) {
+                System.out.print("Crea una contraseña: ");
+                String pass = sc.nextLine().trim();
+                c = new Cliente(login, pass);
+                sistema.registrarUsuario(c);
+                clientes.put(login, c);
+                System.out.println("Cliente '" + login + "' creado exitosamente.");
+            } else {
+                System.out.println("No se creó el cliente. Saliendo...");
+                return null;
+            }
+        } else {
+            System.out.print("Password: ");
+            String pass = sc.nextLine().trim();
+            if (!c.validarPassword(pass)) {
+                System.out.println("Contraseña incorrecta.");
+                return null;
+            }
+            System.out.println("Bienvenido, " + c.getLogin() + "!");
+        }
+
         return c;
     }
 
@@ -146,7 +182,9 @@ public class BoletaMasterCLI {
     private void listarEventosYLocalidades() {
         System.out.println("\nEventos:");
         for (Evento e : new ArrayList<>(sistema.getEventoMap().values())) {
-            System.out.println("- " + e.getId() + " | " + e.getNombre() + " | " + e.getTipo() + " | " + e.getFechaHora());
+            //System.out.println("- " + e.getId() + " | " + e.getNombre() + " | " + e.getTipo() + " | " + e.getFechaHora());
+        	System.out.println(String.format("- %-8s | %-20s | %-10s | %s",e.getId(), e.getNombre(), e.getTipo(),e.getFechaHora().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))));
+
             for (Localidad l : e.getLocalidades()) {
                 String extra = l.esNumerada() ? "Numerada" : ("No numerada, cupo=" + l.getCupoDisponible());
                 System.out.println("   · " + l.getId() + " | " + l.getNombre() + " | precio ahora=" + l.precioPublicoAhora() + " | " + extra);
