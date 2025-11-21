@@ -17,6 +17,14 @@
   },
   {
     "compras": [],
+    "login": "juli",
+    "password": "123",
+    "saldo": {
+      "pesos": 200000
+    }
+  },
+  {
+    "compras": [],
     "login": "maria",
     "password": "456",
     "saldo": {
