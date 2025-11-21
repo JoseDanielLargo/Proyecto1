@@ -18,7 +18,7 @@ public class BoletaMasterCLI {
     private Administrador admin;
     private Organizador organizador;
     private Map<String, Cliente> clientes = new HashMap<>();
-    
+    //ruta de los archivos JSON
     private static final String RUTA_EVENTOS = "data/eventos.json";
     private static final String RUTA_USUARIOS = "data/usuarios.json";
 
@@ -28,6 +28,7 @@ public class BoletaMasterCLI {
     
     public void seedData() {
     	Type tipoUsuarios = new TypeToken<List<Cliente>>(){}.getType();
+    	//carga la lista de usuarios del archivo JSON
     	List<Cliente> listaClientes = PersistenciaJSON.cargarLista(RUTA_USUARIOS, tipoUsuarios);
     	if (listaClientes != null && !listaClientes.isEmpty()) {
     	    clientes = listaClientes.stream()
@@ -41,12 +42,14 @@ public class BoletaMasterCLI {
     	    maria.acreditarSaldo(new Dinero(80_000));
     	    clientes.put(maria.getLogin(), maria);
     	}
+    	//carga los eventos del archivo JSON
     	Type tipoEventos = new TypeToken<List<Evento>>(){}.getType();
     	List<Evento> listaEventos = PersistenciaJSON.cargarLista(RUTA_EVENTOS, tipoEventos);
     	Venue v1 = new Venue("VEN-001", "Bogotá", 20000);
     	sistema.registrarVenue(v1);
     	Venue v2 = new Venue("VEN-002", "Medellín", 15000);
     	sistema.registrarVenue(v2);
+    	//asociar cada evento con su venue
     	for (Evento e : listaEventos) {
     	    Venue venueAsociado = sistema.getVenue(e.getVenueId());
     	    if (venueAsociado == null) {
@@ -55,6 +58,7 @@ public class BoletaMasterCLI {
     	    e.setVenue(venueAsociado);
     	    sistema.registrarEvento(e);
     	}
+    	//guarda los usuarios en el archivo JSON 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             PersistenciaJSON.guardar(RUTA_USUARIOS, clientes.values());
         }));
@@ -126,7 +130,9 @@ public class BoletaMasterCLI {
                 System.out.print("Crea una contraseña: ");
                 String pass = sc.nextLine().trim();
                 c = new Cliente(login, pass);
+                //registra el nuevo usuario
                 sistema.registrarUsuario(c);
+                //agrega al mapa de clientes
                 clientes.put(login, c);
                 System.out.println("Cliente '" + login + "' creado exitosamente.");
             } else {

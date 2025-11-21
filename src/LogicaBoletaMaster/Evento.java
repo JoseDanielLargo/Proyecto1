@@ -69,7 +69,7 @@ public class Evento {
     public void setVenueId(String venueId) {
         this.venueId = venueId;
     }
-
+    //se usa en seedDAta para asignar el venue cuando se carga desde el JSON
     public void setVenue(Venue v) {
         this.venue = v;
     }
