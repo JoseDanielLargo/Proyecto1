@@ -16,14 +16,13 @@ public class Localidad {
     private final boolean numerada;
     private Dinero precioBase;
 
-    // Numerada
+
     private final Map<String, Asiento> asientos = new HashMap<>();
     private final Set<String> asientosVendidos = new HashSet<>();
 
-    // No numerada
     private int cupoDisponible;
 
-    // Oferta simple (descuento absoluto por ventana)
+
     private Dinero ofertaDescuentoAbs = Dinero.cero();
     private LocalDateTime ofertaInicio;
     private LocalDateTime ofertaFin;
@@ -69,7 +68,7 @@ public class Localidad {
         return base;
     }
 
-    // ---- Asientos numerados ----
+
     public void agregarAsiento(String codigo) {
         if (!numerada) throw new IllegalStateException("Localidad no numerada");
         if (codigo == null || codigo.isEmpty()) throw new IllegalArgumentException("Código de asiento inválido");
@@ -93,7 +92,7 @@ public class Localidad {
     	asientosVendidos.remove(codigo); 
     }
 
-    // ---- Cupo no numerado ----
+
     boolean consumirCupo(int n) {
         if (numerada) throw new IllegalStateException("Localidad numerada");
         if (n <= 0) return false;
